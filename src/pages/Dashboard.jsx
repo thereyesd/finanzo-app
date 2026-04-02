@@ -186,12 +186,20 @@ export default function Dashboard() {
                             </div>
                         </div>
                         <p className="text-3xl font-bold mt-1 mb-4">{formatCurrency(balance, currency)}</p>
-                        <button
-                            onClick={() => setShowCargarModal(true)}
-                            className="w-full mb-4 bg-white/20 hover:bg-white/30 active:scale-[0.98] transition-all rounded-2xl py-2.5 text-sm font-bold flex items-center justify-center gap-2"
-                        >
-                            <Plus size={16} /> Cargar monto
-                        </button>
+                        <div className="grid grid-cols-2 gap-2 mb-4">
+                            <button
+                                onClick={() => setShowCargarModal(true)}
+                                className="bg-white/20 hover:bg-white/30 active:scale-[0.98] transition-all rounded-2xl py-2.5 text-sm font-bold flex items-center justify-center gap-2"
+                            >
+                                <Plus size={16} /> Cargar monto
+                            </button>
+                            <button
+                                onClick={() => recentTransactions.length > 0 ? openEdit(recentTransactions[0]) : null}
+                                className="bg-white/20 hover:bg-white/30 active:scale-[0.98] transition-all rounded-2xl py-2.5 text-sm font-bold flex items-center justify-center gap-2"
+                            >
+                                <Pencil size={16} /> Editar monto
+                            </button>
+                        </div>
                         <div className="grid grid-cols-2 gap-3">
                             <div className="bg-white/15 rounded-2xl p-3.5">
                                 <div className="flex items-center gap-2 mb-1">
