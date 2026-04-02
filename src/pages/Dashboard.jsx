@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { collection, query, where, orderBy, limit, onSnapshot, addDoc } from 'firebase/firestore';
+import { collection, query, where, orderBy, limit, onSnapshot, addDoc, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import Header from '../components/layout/Header';
 import BottomNav from '../components/layout/BottomNav';
@@ -15,7 +15,7 @@ import {
 } from 'recharts';
 import {
     TrendingUp, TrendingDown, Plus, ArrowRight,
-    Target, PieChart, Lightbulb, Wallet, X, ArrowDown, ArrowUp
+    Target, PieChart, Lightbulb, Wallet, X, ArrowDown, ArrowUp, Pencil
 } from 'lucide-react';
 
 const CustomTooltip = ({ active, payload, label, currency }) => {
@@ -45,6 +45,13 @@ export default function Dashboard() {
     const [cargarType, setCargarType] = useState('income');
     const [cargarDesc, setCargarDesc] = useState('');
     const [saving, setSaving] = useState(false);
+
+    // Edit state
+    const [editTarget, setEditTarget] = useState(null);
+    const [editAmount, setEditAmount] = useState('');
+    const [editDesc, setEditDesc] = useState('');
+    const [editType, setEditType] = useState('income');
+    const [editSaving, setEditSaving] = useState(false);
 
     const currency = userProfile?.currency || 'PYG';
     const greeting = getGreeting();
@@ -97,6 +104,38 @@ export default function Dashboard() {
 
     // Insights
     const insights = generateInsights(transactions, [], currency);
+
+    const openEdit = (txn) => {
+        setEditTarget(txn);
+        setEditAmount(String(txn.amount));
+        setEditDesc(txn.description);
+        setEditType(txn.type);
+    };
+
+    const closeEdit = () => {
+        setEditTarget(null);
+        setEditAmount('');
+        setEditDesc('');
+        setEditType('income');
+    };
+
+    const handleEdit = async (e) => {
+        e.preventDefault();
+        if (!editAmount) return;
+        setEditSaving(true);
+        try {
+            await updateDoc(doc(db, 'transactions', editTarget.id), {
+                amount: parseFloat(editAmount),
+                description: editDesc,
+                type: editType,
+            });
+            closeEdit();
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setEditSaving(false);
+        }
+    };
 
     const handleCargar = async (e) => {
         e.preventDefault();
@@ -293,9 +332,15 @@ export default function Dashboard() {
                                             <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{txn.description}</p>
                                             <p className="text-xs text-slate-400">{cat.name}</p>
                                         </div>
-                                        <p className={`text-sm font-bold shrink-0 ${isExpense ? 'text-red-500' : 'text-green-600'}`}>
-                                            {isExpense ? '-' : '+'}{formatCurrency(txn.amount, currency)}
-                                        </p>
+                                        <div className="flex items-center gap-1.5 shrink-0">
+                                            <p className={`text-sm font-bold ${isExpense ? 'text-red-500' : 'text-green-600'}`}>
+                                                {isExpense ? '-' : '+'}{formatCurrency(txn.amount, currency)}
+                                            </p>
+                                            <button onClick={() => openEdit(txn)}
+                                                className="p-1.5 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 rounded-lg transition-all">
+                                                <Pencil size={13} className="text-blue-500" />
+                                            </button>
+                                        </div>
                                     </div>
                                 );
                             })}
@@ -306,6 +351,59 @@ export default function Dashboard() {
             </main>
 
             <BottomNav />
+
+            {/* Edit Transaction Modal */}
+            {editTarget && (
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-end justify-center">
+                    <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-t-3xl p-6 shadow-2xl animate-slide-up">
+                        <div className="flex justify-center mb-4">
+                            <div className="w-10 h-1 bg-slate-300 dark:bg-slate-700 rounded-full" />
+                        </div>
+                        <div className="flex items-center justify-between mb-5">
+                            <div className="flex items-center gap-2">
+                                <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
+                                    <Pencil size={15} className="text-blue-600" />
+                                </div>
+                                <h2 className="text-xl font-bold text-slate-900 dark:text-white">Editar transacción</h2>
+                            </div>
+                            <button onClick={closeEdit} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
+                                <X size={20} className="text-slate-400" />
+                            </button>
+                        </div>
+                        <form onSubmit={handleEdit} className="space-y-4">
+                            <div className="grid grid-cols-2 gap-3">
+                                <button type="button" onClick={() => setEditType('income')}
+                                    className={`p-3.5 rounded-2xl border-2 font-bold flex flex-col items-center gap-1.5 transition-all ${editType === 'income' ? 'border-green-500 bg-green-50 dark:bg-green-900/20 text-green-600' : 'border-slate-200 dark:border-slate-700 text-slate-400'}`}>
+                                    <ArrowUp size={22} /> Ingreso
+                                </button>
+                                <button type="button" onClick={() => setEditType('expense')}
+                                    className={`p-3.5 rounded-2xl border-2 font-bold flex flex-col items-center gap-1.5 transition-all ${editType === 'expense' ? 'border-red-500 bg-red-50 dark:bg-red-900/20 text-red-500' : 'border-slate-200 dark:border-slate-700 text-slate-400'}`}>
+                                    <ArrowDown size={22} /> Gasto
+                                </button>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Monto</label>
+                                <div className="relative">
+                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-bold text-slate-400">{getCurrencySymbol(currency)}</span>
+                                    <input type="number" value={editAmount} onChange={(e) => setEditAmount(e.target.value)}
+                                        className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-2xl py-4 pl-12 text-3xl font-bold focus:ring-2 focus:ring-primary outline-none text-slate-900 dark:text-white"
+                                        placeholder="0" autoFocus required />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Descripción</label>
+                                <input type="text" value={editDesc} onChange={(e) => setEditDesc(e.target.value)}
+                                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl py-3 px-4 text-sm outline-none focus:ring-2 focus:ring-primary text-slate-900 dark:text-white placeholder:text-slate-400"
+                                    placeholder="Descripción" required />
+                            </div>
+                            <button type="submit" disabled={editSaving}
+                                className="w-full py-4 rounded-2xl font-bold text-white bg-blue-500 hover:bg-blue-600 shadow-lg shadow-blue-500/25 transition-all disabled:opacity-50">
+                                {editSaving ? 'Guardando...' : 'Guardar cambios'}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            )}
 
             {/* Cargar Monto Modal */}
             {showCargarModal && (
