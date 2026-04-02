@@ -238,7 +238,7 @@ export default function Transactions() {
                                         const Icon = cat.icon;
                                         const isExpense = txn.type === 'expense';
                                         return (
-                                            <div key={txn.id} className="flex items-center gap-3.5 bg-white dark:bg-background-dark px-4 py-3.5 border-b border-slate-50 dark:border-slate-800/50 group">
+                                            <div key={txn.id} className="flex items-center gap-3.5 bg-white dark:bg-background-dark px-4 py-3.5 border-b border-slate-50 dark:border-slate-800/50">
                                                 <div className={`flex size-11 items-center justify-center rounded-xl shrink-0 ${cat.bgLight} ${cat.bgDark} ${cat.text}`}>
                                                     <Icon size={22} />
                                                 </div>
@@ -246,16 +246,16 @@ export default function Transactions() {
                                                     <p className="font-semibold text-sm text-slate-900 dark:text-white truncate">{txn.description}</p>
                                                     <p className="text-xs text-slate-400">{cat.name}</p>
                                                 </div>
-                                                <div className="text-right shrink-0 flex items-center gap-1">
+                                                <div className="text-right shrink-0 flex items-center gap-1.5">
                                                     <p className={`font-bold text-sm ${isExpense ? 'text-red-500' : 'text-green-600'}`}>
                                                         {isExpense ? '-' : '+'}{formatCurrency(txn.amount, currency)}
                                                     </p>
                                                     <button onClick={() => openEdit(txn)}
-                                                        className="p-1.5 opacity-0 group-hover:opacity-100 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all ml-1">
+                                                        className="p-1.5 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 rounded-lg transition-all">
                                                         <Pencil size={14} className="text-blue-500" />
                                                     </button>
                                                     <button onClick={() => setDeleteTarget(txn.id)}
-                                                        className="p-1.5 opacity-0 group-hover:opacity-100 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all">
+                                                        className="p-1.5 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 rounded-lg transition-all">
                                                         <Trash2 size={14} className="text-red-500" />
                                                     </button>
                                                 </div>
