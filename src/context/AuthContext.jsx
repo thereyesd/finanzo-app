@@ -48,19 +48,22 @@ export const AuthProvider = ({ children }) => {
             if (!mounted) return;
 
             if (firebaseUser) {
+                setUser(firebaseUser);
+                // Cargar perfil con timeout de 5s para no congelar la app
                 try {
-                    setUser(firebaseUser);
-                    // Fetch user profile from Firestore
                     if (db) {
                         const userDocRef = doc(db, 'users', firebaseUser.uid);
-                        const userDoc = await getDoc(userDocRef);
+                        const userDoc = await Promise.race([
+                            getDoc(userDocRef),
+                            new Promise((_, reject) => setTimeout(() => reject(new Error('Profile fetch timeout')), 5000))
+                        ]);
 
                         if (mounted && userDoc.exists()) {
                             setUserProfile(userDoc.data());
                         }
                     }
                 } catch (error) {
-                    console.error("Error fetching profile:", error);
+                    console.warn("Profile load skipped:", error.message);
                 }
             } else {
                 setUser(null);
