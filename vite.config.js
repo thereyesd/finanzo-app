@@ -9,6 +9,7 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
+      selfDestroying: true,
       devOptions: {
         enabled: false
       },
