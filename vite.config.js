@@ -9,7 +9,6 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      selfDestroying: true,
       devOptions: {
         enabled: false
       },
@@ -50,8 +49,25 @@ export default defineConfig({
       workbox: {
         skipWaiting: true,
         clientsClaim: true,
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        // Solo cachear assets estáticos, NO el HTML
+        globPatterns: ['**/*.{js,css,ico,png,svg,woff2}'],
+        // Navegación siempre va a la red primero
+        navigateFallback: null,
         runtimeCaching: [
+          {
+            // HTML pages — siempre red primero
+            urlPattern: ({ request }) => request.mode === 'navigate',
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'pages-cache',
+              expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 }
+            }
+          },
+          {
+            // Firebase Auth/Firestore — siempre red
+            urlPattern: /^https:\/\/(firestore|identitytoolkit|securetoken)\.googleapis\.com\/.*/i,
+            handler: 'NetworkOnly'
+          },
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
             handler: 'CacheFirst',
@@ -66,14 +82,6 @@ export default defineConfig({
             options: {
               cacheName: 'gstatic-fonts-cache',
               expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 }
-            }
-          },
-          {
-            urlPattern: /^https:\/\/firestore\.googleapis\.com\/.*/i,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'firestore-cache',
-              expiration: { maxEntries: 50, maxAgeSeconds: 60 * 5 }
             }
           }
         ]
