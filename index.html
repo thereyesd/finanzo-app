@@ -32,6 +32,16 @@
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      // Limpiar SW viejos automáticamente (v2)
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(regs) {
+          var cleaned = false;
+          regs.forEach(function(r) { r.unregister(); cleaned = true; });
+          if (cleaned) { caches.keys().then(function(k) { k.forEach(function(n) { caches.delete(n); }); }); }
+        });
+      }
+    </script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
