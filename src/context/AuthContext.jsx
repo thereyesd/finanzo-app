@@ -27,13 +27,13 @@ export const AuthProvider = ({ children }) => {
     useEffect(() => {
         let mounted = true;
 
-        // Safety timeout in case Firebase takes too long
+        // Safety timeout — if Firebase doesn't respond in 4s, stop waiting
         const timeoutId = setTimeout(() => {
-            if (mounted && loading) {
+            if (mounted) {
                 console.warn('Firebase auth initialization timed out');
                 setLoading(false);
             }
-        }, 8000);
+        }, 4000);
 
         // Check if auth instance exists (Firebase initialized)
         if (!auth) {

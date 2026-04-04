@@ -8,10 +8,3 @@ createRoot(document.getElementById('root')).render(
     <App />
   </StrictMode>
 )
-
-// Auto-reload when new service worker is available
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.addEventListener('controllerchange', () => {
-    window.location.reload()
-  })
-}
